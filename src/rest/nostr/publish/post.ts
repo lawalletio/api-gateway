@@ -120,7 +120,10 @@ const handler = (req: ExtendedRequest, res: Response) => {
     return;
   }
   req.context.outbox.publish(event);
-  res.status(202).header('Location', nip19.neventEncode(event)).send();
+  res
+    .status(202)
+    .header('Location', `nostr:${nip19.neventEncode(event)}`)
+    .send();
 };
 
 export default handler;
