@@ -84,7 +84,6 @@ function validateSchema(event: NostrEvent): boolean {
   let valid = false;
   switch (subKindTags[0][1]) {
     case 'internal-transaction-start':
-    case 'inbound-transaction-start':
       valid = validateTransaction(event);
       break;
     default:
