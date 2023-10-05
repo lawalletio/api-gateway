@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { ExtendedRequest } from '@type/request';
-import { nip19, validateEvent, verifySignature } from 'nostr-tools';
+import { nip19, nip26, validateEvent, verifySignature } from 'nostr-tools';
 
 import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { isEmpty, logger } from '@lib/utils';
@@ -66,10 +66,25 @@ function validateTransaction(event: NostrEvent): boolean {
 }
 
 /**
+ * Check NIP-26 compliance
+ *
+ * If the event contains a delegation tag, check that the delegatee is
+ * the one that created the event, that we are inside the time limit
+ * and that the signature is valid.
+ */
+function validateNip26(event: NostrEvent) {
+  if (event.tags.some((t) => 'delegation' === t[0])) {
+    return nip26.getDelegator(event) !== null;
+  }
+  return true;
+}
+
+/**
  * Check if an event is a valid lawallet communication.
  *
  * Return true if the event has a valid kind and sub-kind for a
  * lawallet communication and perform validations based on subkind.
+ * Also Check for NIP-26 compliance.
  */
 function validateSchema(event: NostrEvent): boolean {
   if (1112 !== event.kind) {
@@ -79,6 +94,10 @@ function validateSchema(event: NostrEvent): boolean {
   const subKindTags = event.tags.filter((t) => 't' === t[0]);
   if (1 !== subKindTags.length) {
     debug('Event must have exactly one subkind %s', event.id);
+    return false;
+  }
+  if (!validateNip26(event)) {
+    debug('Invalid delegation', event.id);
     return false;
   }
   let valid = false;
