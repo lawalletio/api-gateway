@@ -38,12 +38,14 @@ class OutboxService {
 
     this.ndk.on('error', (err) => {
       log('Error connecting to Relay', err);
+      throw err;
     });
 
     // Connect to Nostr
     log('Connecting to Nostr...');
     this.ndk.connect().catch((error) => {
       warn('Error connecting to nostr: %o', error);
+      throw error;
     });
   }
 
