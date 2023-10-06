@@ -58,7 +58,10 @@ function validateTransaction(event: NostrEvent): boolean {
       return false;
     }
   }
-  if (Modules.urlx.pubkey === ptags[1][1] && 'string' !== typeof content.memo) {
+  if (
+    Modules.urlx.pubkey === ptags[1][1] &&
+    !event.tags.some((t) => 'bolt11' === t[0])
+  ) {
     debug('Outbound transactions must contain an invoice. %s', event.id);
     return false;
   }
