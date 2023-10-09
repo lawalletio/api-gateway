@@ -1,6 +1,12 @@
 import type { Response } from 'express';
 import type { ExtendedRequest } from '@type/request';
-import { nip19, nip26, validateEvent, verifySignature } from 'nostr-tools';
+import {
+  nip19,
+  nip26,
+  validateEvent,
+  verifySignature,
+  Event,
+} from 'nostr-tools';
 
 import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { isEmpty, logger } from '@lib/utils';
@@ -75,7 +81,7 @@ function validateTransaction(event: NostrEvent): boolean {
  */
 function validateNip26(event: NostrEvent) {
   if (event.tags.some((t) => 'delegation' === t[0])) {
-    return nip26.getDelegator(event) !== null;
+    return nip26.getDelegator(event as Event<number>) !== null;
   }
   return true;
 }
@@ -132,7 +138,7 @@ const handler = (req: ExtendedRequest, res: Response) => {
   }
   if (
     !validateEvent(event) ||
-    !verifySignature(event) ||
+    !verifySignature(event as Event<number>) ||
     !validateSchema(event)
   ) {
     log('Received invalid nostr event %O', event);
@@ -142,7 +148,7 @@ const handler = (req: ExtendedRequest, res: Response) => {
   req.context.outbox.publish(event);
   res
     .status(202)
-    .header('Location', `nostr:${nip19.neventEncode(event)}`)
+    .header('Location', `nostr:${nip19.neventEncode(event as Event<number>)}`)
     .send();
 };
 
