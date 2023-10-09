@@ -84,7 +84,7 @@ function validateNip26(event: NostrEvent) {
  * Check if an event is a valid lawallet communication.
  *
  * Return true if the event has a valid kind and sub-kind for a
- * lawallet communication and perform validations based on subkind.
+ * lawallet communication and perform validations based on sub-kind.
  * Also Check for NIP-26 compliance.
  */
 function validateSchema(event: NostrEvent): boolean {
@@ -94,7 +94,7 @@ function validateSchema(event: NostrEvent): boolean {
   }
   const subKindTags = event.tags.filter((t) => 't' === t[0]);
   if (1 !== subKindTags.length) {
-    debug('Event must have exactly one subkind %s', event.id);
+    debug('Event must have exactly one sub-kind %s', event.id);
     return false;
   }
   if (!validateNip26(event)) {
@@ -107,7 +107,7 @@ function validateSchema(event: NostrEvent): boolean {
       valid = validateTransaction(event);
       break;
     default:
-      debug('Invalid subkind for %s', event.id);
+      debug('Invalid sub-kind for %s', event.id);
       break;
   }
   return valid;
@@ -116,7 +116,7 @@ function validateSchema(event: NostrEvent): boolean {
 /**
  * Publish a valid event in NOSTR
  *
- * Peform sanity checks, validate if a signed nostr event was received
+ * Perform sanity checks, validate if a signed nostr event was received
  * and publish it if it's a valid lawallet communication.
  */
 const handler = (req: ExtendedRequest, res: Response) => {
