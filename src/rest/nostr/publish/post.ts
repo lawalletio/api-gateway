@@ -14,7 +14,7 @@ import { Modules } from '@lib/modules';
 
 const log: debug.Debugger = logger.extend('rest:nostr:publish:post');
 const debug: debug.Debugger = log.extend('debug');
-const lowHex32BRegex: RegExp = /^\x{64}$/;
+const lowHex32BRegex: RegExp = /^[0-9a-f]{64}$/;
 const acceptRegex: RegExp = /application\/(nostr\+)?json|\*\/\*/;
 
 /**
