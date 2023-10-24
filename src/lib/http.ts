@@ -7,18 +7,31 @@ import { logger } from './utils';
 const log: debug.Debugger = logger.extend('lib:http');
 const error: debug.Debugger = log.extend('error');
 
-export function passthroughtGet(
+export function passthrough(
   host: string,
   req: ExtendedRequest,
   res: Response,
 ): ClientRequest {
-  return http
-    .get(`${host}${req.url}`, (response) => {
-      response.on('data', (data) => res.write(data));
-      response.on('end', () => res.status(response.statusCode || 503).end());
-    })
+  const clientRequest: ClientRequest = http
+    .request(
+      `${host}${req.url}`,
+      {
+        headers: req.headers,
+        joinDuplicateHeaders: true,
+        method: req.method,
+        protocol: req.protocol,
+      },
+      (response) => {
+        response.on('data', (data) => res.write(data));
+        response.on('end', () => res.status(response.statusCode || 503).end());
+      },
+    )
     .on('error', (e) => {
       error('Unexpected error: %O', e);
       res.status(500).send();
     });
+  if (Object.keys(req.body).length !== 0) {
+    clientRequest.write(req.body);
+  }
+  return clientRequest;
 }
