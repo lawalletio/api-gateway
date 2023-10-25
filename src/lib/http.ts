@@ -19,11 +19,12 @@ export function passthrough(
         headers: req.headers,
         joinDuplicateHeaders: true,
         method: req.method,
-        protocol: req.protocol,
+        protocol: `${req.protocol}:`,
       },
       (response) => {
+        res.status(response.statusCode || 503);
         response.on('data', (data) => res.write(data));
-        response.on('end', () => res.status(response.statusCode || 503).end());
+        response.on('end', () => res.end());
       },
     )
     .on('error', (e) => {
@@ -33,5 +34,6 @@ export function passthrough(
   if (Object.keys(req.body).length !== 0) {
     clientRequest.write(req.body);
   }
+  clientRequest.end();
   return clientRequest;
 }
