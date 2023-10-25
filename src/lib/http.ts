@@ -2,9 +2,9 @@ import { Response } from 'express';
 import http, { ClientRequest } from 'http';
 
 import type { ExtendedRequest } from '@type/request';
-import { logger } from './utils';
+import debug from 'debug';
 
-const log: debug.Debugger = logger.extend('lib:http');
+const log: debug.Debugger = debug('card:lib:http');
 const error: debug.Debugger = log.extend('error');
 
 export function passthrough(
@@ -31,9 +31,7 @@ export function passthrough(
       error('Unexpected error: %O', e);
       res.status(500).send();
     });
-  if (Object.keys(req.body).length !== 0) {
-    clientRequest.write(req.body);
-  }
-  clientRequest.end();
+  req.on('data', (data) => clientRequest.write(data));
+  req.on('end', () => clientRequest.end());
   return clientRequest;
 }

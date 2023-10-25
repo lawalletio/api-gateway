@@ -3,7 +3,13 @@ import path from 'path';
 import { Debugger } from 'debug';
 import express, { Router } from 'express';
 import * as middlewares from './lib/middlewares';
-import { EmptyRoutesError, setUpRoutes, setUpSubscriptions } from '@lib/utils';
+import {
+  EmptyRoutesError,
+  isEmpty,
+  setUpPassthroughs,
+  setUpRoutes,
+  setUpSubscriptions,
+} from '@lib/utils';
 import { Context, ExtendedRequest } from '@type/request';
 import 'websocket-polyfill';
 
@@ -11,6 +17,7 @@ import { logger } from '@lib/utils';
 import { getReadNDK, getWriteNDK } from '@services/ndk';
 import { NDKRelay } from '@nostr-dev-kit/ndk';
 import { OutboxService } from '@services/outbox';
+import { Modules } from '@lib/modules';
 
 const port = process.env.PORT || 8000;
 
@@ -56,6 +63,12 @@ log('Setting up routes...');
 let routes: Router = express.Router();
 let startExpress = true;
 
+for (const modName in Modules) {
+  const mod = Modules[modName];
+  if (!isEmpty(mod.routeMethods)) {
+    routes = setUpPassthroughs(routes, mod);
+  }
+}
 try {
   routes = setUpRoutes(routes, path.join(__dirname, 'rest'));
 } catch (e) {

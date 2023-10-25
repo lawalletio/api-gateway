@@ -1,10 +1,12 @@
 import debug from 'debug';
-import { Router } from 'express';
+import express, { Router, Response, Request } from 'express';
 import { globSync } from 'glob';
 import NDK from '@nostr-dev-kit/ndk';
 
 import Path from 'path';
-import { Context } from '@type/request';
+import { Context, ExtendedRequest } from '@type/request';
+import { Module } from './modules';
+import { passthrough } from '@lib/http';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
@@ -91,6 +93,7 @@ export const setUpRoutes = (router: Router, path: string): Router => {
           const method: RouteMethod = matches.groups.method as RouteMethod;
           const route: string = `/${matches.groups.route}`;
 
+          router[method](route, express.json());
           router[method](
             route,
             (await require(Path.resolve(path, file))).default,
@@ -126,6 +129,23 @@ export const setUpRoutes = (router: Router, path: string): Router => {
     }
   });
 
+  return router;
+};
+
+export const setUpPassthroughs = (router: Router, mod: Module): Router => {
+  log(
+    'Setting up passthrough routes for module in %s: %O',
+    mod.url,
+    mod.routeMethods,
+  );
+  const handler = (req: Request, res: Response) => {
+    passthrough(mod.url, req as ExtendedRequest, res);
+  };
+  for (const route in mod.routeMethods) {
+    for (const method of mod.routeMethods[route]) {
+      router[method as RouteMethod](route, handler);
+    }
+  }
   return router;
 };
 
