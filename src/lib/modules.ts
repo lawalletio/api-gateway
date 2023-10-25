@@ -15,7 +15,6 @@ export const Modules: Record<string, Module> = {
     url: requiredEnvVar('CARD_URI'),
     routeMethods: {
       '/card': ['post'],
-      '/card/holder': ['get'],
       '/card/pay': ['get', 'post'],
       '/card/scan': ['get'],
     },
