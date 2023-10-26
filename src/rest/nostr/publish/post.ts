@@ -145,11 +145,26 @@ const handler = (req: ExtendedRequest, res: Response) => {
     res.status(422).send();
     return;
   }
-  req.context.outbox.publish(event);
-  res
-    .status(202)
-    .header('Location', `nostr:${nip19.neventEncode(event as Event<number>)}`)
-    .send();
+  req.context.outbox
+    .publish(event)
+    .then(() => {
+      res
+        .status(202)
+        .header(
+          'Location',
+          `nostr:${nip19.neventEncode(event as Event<number>)}`,
+        )
+        .send();
+    })
+    .catch((cause) => {
+      switch (cause) {
+        case 'Did not publish to any relay':
+          res.status(400).send();
+          break;
+        default:
+          res.status(500).send();
+      }
+    });
 };
 
 export default handler;
