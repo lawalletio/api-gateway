@@ -18,61 +18,6 @@ const lowHex32BRegex: RegExp = /^[0-9a-f]{64}$/;
 const acceptRegex: RegExp = /application\/(nostr\+)?json|\*\/\*/;
 
 /**
- * Check if an event is a valid lawallet transaction.
- *
- * Return true if the event has exactly 2 "p" tags, the first one is
- * the ledger pubkey and the second is a valid pubkey, the content is a
- * valid JSON that contains tokens and amount and optionally a memo
- * string which is required if the second "p" tag is the URLX module's
- * pubkey.
- */
-function validateTransaction(event: NostrEvent): boolean {
-  const ptags = event.tags.filter((t) => 'p' === t[0]);
-  if (2 !== ptags.length) {
-    debug('Invalid number of p-tags for event %s', event.id);
-    return false;
-  }
-  if (Modules.ledger.pubkey !== ptags[0][1]) {
-    debug('Internal transaction target MUST be the ledger. %s', event.id);
-    return false;
-  }
-  if (!lowHex32BRegex.test(ptags[1][1])) {
-    debug('Invalid p-tag %s for event %s', ptags[1][1], event.id);
-    return false;
-  }
-  let content;
-  try {
-    content = JSON.parse(event.content);
-  } catch {
-    debug('Unparsable event content: %s for event %s', event.content, event.id);
-    return false;
-  }
-  let tokens = content.tokens ? Object.keys(content.tokens) : [];
-  if (tokens.length < 1) {
-    debug('Transaction must at least have one token. %s', event.id);
-    return false;
-  }
-  for (const token of tokens) {
-    if (isNaN(content.tokens[token])) {
-      debug('Token amount must be a numeric value. %s', event.id);
-      return false;
-    }
-    if (content.tokens[token] <= 0) {
-      debug('Token amount must be positive. %s', event.id);
-      return false;
-    }
-  }
-  if (
-    Modules.urlx.pubkey === ptags[1][1] &&
-    !event.tags.some((t) => 'bolt11' === t[0])
-  ) {
-    debug('Outbound transactions must contain an invoice. %s', event.id);
-    return false;
-  }
-  return true;
-}
-
-/**
  * Check NIP-26 compliance
  *
  * If the event contains a delegation tag, check that the delegatee is
@@ -84,39 +29,6 @@ function validateNip26(event: NostrEvent) {
     return nip26.getDelegator(event as Event<number>) !== null;
   }
   return true;
-}
-
-/**
- * Check if an event is a valid lawallet communication.
- *
- * Return true if the event has a valid kind and sub-kind for a
- * lawallet communication and perform validations based on sub-kind.
- * Also Check for NIP-26 compliance.
- */
-function validateSchema(event: NostrEvent): boolean {
-  if (1112 !== event.kind) {
-    debug('Invalid kind %d for event %s', event.kind, event.id);
-    return false;
-  }
-  const subKindTags = event.tags.filter((t) => 't' === t[0]);
-  if (1 !== subKindTags.length) {
-    debug('Event must have exactly one sub-kind %s', event.id);
-    return false;
-  }
-  if (!validateNip26(event)) {
-    debug('Invalid delegation', event.id);
-    return false;
-  }
-  let valid = false;
-  switch (subKindTags[0][1]) {
-    case 'internal-transaction-start':
-      valid = validateTransaction(event);
-      break;
-    default:
-      debug('Invalid sub-kind for %s', event.id);
-      break;
-  }
-  return valid;
 }
 
 /**
@@ -139,7 +51,7 @@ const handler = (req: ExtendedRequest, res: Response) => {
   if (
     !validateEvent(event) ||
     !verifySignature(event as Event<number>) ||
-    !validateSchema(event)
+    !validateNip26(event)
   ) {
     log('Received invalid nostr event %O', event);
     res.status(422).send();
