@@ -7,15 +7,12 @@ import Path from 'path';
 import { Context, ExtendedRequest } from '@type/request';
 import { Module } from './modules';
 import { passthrough } from '@lib/http';
-import LastHandledTracker from '@lib/lastHandled';
 
 type RouteMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 export const logger: debug.Debugger = debug(process.env.MODULE_NAME || '');
 const log: debug.Debugger = logger.extend('lib:utils');
 const warn: debug.Debugger = logger.extend('lib:utils:warn');
-const CREATED_AT_TOLERANCE: number = 2 * 180;
-let lastHandledTracker: LastHandledTracker;
 
 export class EmptyRoutesError extends Error {}
 export class DuplicateRoutesError extends Error {}
@@ -152,12 +149,11 @@ export const setUpPassthroughs = (router: Router, mod: Module): Router => {
   return router;
 };
 
-export const setUpSubscriptions = async (
+export const setUpSubscriptions = (
   ctx: Context,
-  readNdk: NDK,
-  writeNDK: NDK,
+  ndk: NDK,
   path: string,
-): Promise<NDK | null> => {
+): NDK | null => {
   const allFiles = filesWithExtensionsWithoutExtensions(path, ['js', 'ts']);
   const duplicates = findDuplicates(allFiles);
 
@@ -168,23 +164,12 @@ export const setUpSubscriptions = async (
     return null;
   }
 
-  if (!lastHandledTracker) {
-    lastHandledTracker = new LastHandledTracker(readNdk, writeNDK, allFiles);
-    await lastHandledTracker.fetchLastHandled();
-  }
-
   allFiles.forEach(async (file) => {
     const matches = file.match(/^(?<name>[^/]*)$/i);
-    const lastHandled: number = lastHandledTracker.get(file);
 
     if (matches?.groups) {
       let { filter, getHandler } = await require(Path.resolve(path, file));
-      if (lastHandled) {
-        filter.since = lastHandled - CREATED_AT_TOLERANCE;
-      } else {
-        delete filter.since;
-      }
-      readNdk
+      ndk
         .subscribe(filter, {
           closeOnEose: false,
         })
@@ -192,8 +177,7 @@ export const setUpSubscriptions = async (
           try {
             const handler: (nostrEvent: NostrEvent) => Promise<void> =
               getHandler(ctx, 0);
-            await handler(nostrEvent);
-            lastHandledTracker.hit(file, nostrEvent.created_at);
+            return await handler(nostrEvent);
           } catch (e) {
             warn(
               `Unexpected exception found when handling ${matches?.groups?.name}: %O`,
@@ -210,7 +194,7 @@ export const setUpSubscriptions = async (
     }
   });
 
-  return readNdk;
+  return ndk;
 };
 
 export const requiredEnvVar = (key: string): string => {
