@@ -17,6 +17,8 @@ export const Modules: Record<string, Module> = {
       '/card': ['post'],
       '/card/pay': ['get', 'post'],
       '/card/scan': ['get'],
+      '/card/reset/request': ['post'],
+      '/card/reset/claim': ['post'],
     },
   },
   ledger: {
