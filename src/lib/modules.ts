@@ -26,6 +26,13 @@ export const Modules: Record<string, Module> = {
     url: '',
     routeMethods: {},
   },
+  monitor: {
+    pubkey: '',
+    url: requiredEnvVar('MONITOR_URI'),
+    routeMethods: {
+      '/status': ['get'],
+    },
+  },
   urlx: {
     pubkey: requiredEnvVar('URLX_PUBLIC_KEY'),
     url: requiredEnvVar('URLX_URI'),
