@@ -19,6 +19,8 @@ export const Modules: Record<string, Module> = {
       '/card/scan': ['get'],
       '/card/reset/request': ['post'],
       '/card/reset/claim': ['post'],
+      '/card/config/request': ['post'],
+      '/card/data/request': ['post'],
     },
   },
   ledger: {
@@ -38,6 +40,7 @@ export const Modules: Record<string, Module> = {
     url: requiredEnvVar('URLX_URI'),
     routeMethods: {
       '/lnurlp/:pubkey/callback': ['get'],
+      '/invoice/:invoiceHash': ['get'],
     },
   },
 };
