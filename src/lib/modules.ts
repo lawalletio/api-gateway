@@ -39,6 +39,7 @@ export const Modules: Record<string, Module> = {
     pubkey: requiredEnvVar('URLX_PUBLIC_KEY'),
     url: requiredEnvVar('URLX_URI'),
     routeMethods: {
+      '/lnurlp/:pubkey': ['get'],
       '/lnurlp/:pubkey/callback': ['get'],
       '/invoice/:invoiceHash': ['get'],
     },
