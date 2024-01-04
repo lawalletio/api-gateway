@@ -1,19 +1,22 @@
+// eslint-disable-next-line tsdoc/syntax
 /** @type {import('ts-jest').JestConfigWithTsJest} */
+// eslint-disable-next-line no-undef
 module.exports = {
-  preset: 'ts-jest',
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
-  },
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-  },
-  testMatch: [
-    '<rootDir>/**/(*.)test.(js|ts)',
-    '<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}',
-  ],
-  testEnvironment: 'node',
   clearMocks: true,
   collectCoverage: true,
-  coverageDirectory: '.coverage',
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
+  coverageDirectory: '<rootDir>/dist/.coverage',
+  coverageProvider: 'babel',
+  logHeapUsage: true,
+  passWithNoTests: true,
+  preset: 'ts-jest',
+  randomize: true,
+  resetModules: true,
+  restoreMocks: false,
+  testEnvironment: 'node',
+  testMatch: ['<rootDir>/tests/**/*.test.ts'],
+  transform: {
+    '\\.ts$': 'ts-jest',
+  },
+  verbose: true,
 };
