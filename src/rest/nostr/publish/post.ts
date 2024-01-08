@@ -10,6 +10,7 @@ import {
 
 import { NostrEvent } from '@nostr-dev-kit/ndk';
 import { isEmpty, logger } from '@lib/utils';
+import { RestHandler } from '@rest/index';
 
 const log: debug.Debugger = logger.extend('rest:nostr:publish:post');
 const debug: debug.Debugger = log.extend('debug');
@@ -35,7 +36,7 @@ function validateNip26(event: NostrEvent) {
  * Perform sanity checks, validate if a signed nostr event was received
  * and publish it if it's a valid lawallet communication.
  */
-const handler = (req: ExtendedRequest, res: Response) => {
+const handler: RestHandler = async (req: ExtendedRequest, res: Response) => {
   const event: NostrEvent = req.body;
   if (isEmpty(event)) {
     log('Received unparsable body %O', req.body);
@@ -55,7 +56,7 @@ const handler = (req: ExtendedRequest, res: Response) => {
     res.status(422).send();
     return;
   }
-  req.context.outbox
+  await req.context.outbox
     .publish(event)
     .then(() => {
       res

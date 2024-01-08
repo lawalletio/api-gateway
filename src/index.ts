@@ -26,11 +26,14 @@ const warn: Debugger = log.extend('warn');
 const error: Debugger = log.extend('error');
 
 const writeNDK = getWriteNDK();
-const ctx: Context = { outbox: new OutboxService(getWriteNDK()) };
+const readNDK = getReadNDK();
+const ctx: Context = {
+  outbox: new OutboxService(getWriteNDK()),
+  readNDK,
+};
 
 // Instantiate ndk
 log('Instantiate NDK');
-const readNDK = getReadNDK();
 log('Subscribing...');
 const subscribed = setUpSubscriptions(
   ctx,

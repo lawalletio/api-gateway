@@ -1,7 +1,8 @@
 import type { Response } from 'express';
 import type { ExtendedRequest } from '@type/request';
+import { RestHandler } from '@rest/index';
 
-const handler = async (req: ExtendedRequest, res: Response) => {
+const handler: RestHandler = async (req: ExtendedRequest, res: Response) => {
   const url: URL = new URL(req.url, `${req.protocol}://${req.headers.host}`);
   res
     .status(200)

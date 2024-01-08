@@ -8,6 +8,12 @@ module.exports = {
   coverageDirectory: '<rootDir>/dist/.coverage',
   coverageProvider: 'babel',
   logHeapUsage: true,
+  moduleNameMapper: {
+    "^@lib/(.*)$": '<rootDir>/src/lib/$1',
+    "^@rest/(.*)$": '<rootDir>/src/rest/$1',
+    "^@services/(.*)$": '<rootDir>/src/services/$1',
+    "^@type/(.*)$": '<rootDir>/src/type/$1',
+  },
   passWithNoTests: true,
   preset: 'ts-jest',
   randomize: true,
