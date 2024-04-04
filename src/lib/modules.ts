@@ -28,6 +28,14 @@ export const Modules: Record<string, Module> = {
     url: '',
     routeMethods: {},
   },
+  massacre: {
+    pubkey: '',
+    url: requiredEnvVar('MASSACRE_URI'),
+    routeMethods: {
+      '/massacre/games/:gameId/power': ['get'],
+      '/massacre/games/:gameId/tickets': ['post'],
+    },
+  },
   monitor: {
     pubkey: '',
     url: requiredEnvVar('MONITOR_URI'),
