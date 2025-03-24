@@ -68,7 +68,7 @@ describe('POST /nostr/fetch', () => {
       await handler({ body, ...mockRec }, mockRes);
 
       expect(mockRec.context.readNDK.fetchEvents).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: expectedLimit }),
+        expect.objectContaining([{ limit: expectedLimit }]),
       );
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(
@@ -100,7 +100,7 @@ describe('POST /nostr/fetch', () => {
     await handler({ body: {}, ...mockRec }, mockRes);
 
     expect(mockRec.context.readNDK.fetchEvents).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: MAX_LIMIT }),
+      expect.objectContaining([{ limit: MAX_LIMIT }]),
     );
     expect(mockRes.status).toHaveBeenCalledWith(500);
   });

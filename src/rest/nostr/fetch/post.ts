@@ -28,20 +28,25 @@ function isValidFilter(filter: NDKFilter): boolean {
  * greater than our MAX_LIMIT we will ignore it and use the MAX_LIMIT
  */
 const handler: RestHandler = async (req: ExtendedRequest, res: Response) => {
-  const filter: NDKFilter = req.body;
-  if (typeof filter !== 'object' || null === filter) {
-    log('Received unparsable body %O', req.body);
-    res.status(415).send();
-    return;
-  }
-  if (!isValidFilter(filter)) {
-    log('Received invalid filter %O', filter);
-    res.status(422).send();
-    return;
-  }
+  const filters: NDKFilter | NDKFilter[] = req.body;
+  const filtersArray = Array.isArray(filters) ? filters : [filters];
 
-  if (MAX_LIMIT < (filter.limit ?? Infinity)) {
-    filter.limit = MAX_LIMIT;
+  for (const filter of filtersArray) {
+    if (typeof filter !== 'object' || filter === null) {
+      log('Received unparsable filter %O', filter);
+      res.status(415).send();
+      return;
+    }
+    
+    if (!isValidFilter(filter)) {
+      log('Received invalid filter %O', filter);
+      res.status(422).send();
+      return;
+    }
+
+    if (MAX_LIMIT < (filter.limit ?? Infinity)) {
+      filter.limit = MAX_LIMIT;
+    }
   }
 
   await new Promise<void>(async (resolve) => {
@@ -50,9 +55,11 @@ const handler: RestHandler = async (req: ExtendedRequest, res: Response) => {
       res.status(400).json({ status: 'ERROR', reason: notice });
       resolve();
     };
+
     req.context.readNDK.pool.once('notice', handleNotice);
+
     await req.context.readNDK
-      .fetchEvents(filter)
+      .fetchEvents(filtersArray)
       .then((events) => {
         debug('Received events %O', events);
         res.status(200).json(Array.from(events).map((e) => e.rawEvent()));
@@ -61,6 +68,7 @@ const handler: RestHandler = async (req: ExtendedRequest, res: Response) => {
         debug('Unexpected error %O', e);
         res.status(500).send();
       });
+
     req.context.readNDK.pool.off('notice', handleNotice);
     resolve();
   });
